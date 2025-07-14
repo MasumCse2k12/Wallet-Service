@@ -6,10 +6,7 @@ import com.wallet.bs23.service.TxnService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/wallet")
@@ -28,15 +25,15 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/release")
-    public ResponseEntity<?> release(@Validated @RequestBody TransferRequest request) {
-        ApiResponse response = txnService.release(request);
+    @PutMapping("/release")
+    public ResponseEntity<?> release(@RequestParam("transactionId") String  transactionId) {
+        ApiResponse response = txnService.release(transactionId);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/reverse")
-    public ResponseEntity<?> reverse(@Validated @RequestBody TransferRequest request) {
-        ApiResponse response = txnService.reverse(request);
+    @PutMapping("/reverse")
+    public ResponseEntity<?> reverse(@RequestParam("transactionId") String  transactionId) {
+        ApiResponse response = txnService.reverse(transactionId);
         return ResponseEntity.ok(response);
     }
 }

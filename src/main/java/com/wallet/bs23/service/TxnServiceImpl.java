@@ -88,14 +88,14 @@ public class TxnServiceImpl implements TxnService {
 
     private void initiateEscrow(TransferRequest request, Accounts fromAccounts, Accounts toAccounts) {
 
-        TransferEntity transferEntity = buildTransferEntity(request, fromAccounts.getId(), toAccounts.getId(),
+        TransferEntity transferEntity = buildTransferEntity(request.getTransactionId(), fromAccounts.getId(), toAccounts.getId(),
                 request.getAmount(), Constants.PENDING, request.getCurrency(),  request.getTransactionType(), null);
         transferEntity.setCreatedDate(Date.valueOf(LocalDate.now()));
         transferRepository.save(transferEntity);
         log.info("initiateEscrow successfully!");
     }
 
-    private TransferEntity buildTransferEntity(TransferRequest request,
+    private TransferEntity buildTransferEntity(String  transactionId,
                                                Integer fromAccount,
                                                Integer toAccount,
                                                BigDecimal amount,
@@ -108,7 +108,7 @@ public class TxnServiceImpl implements TxnService {
                 .toAccount(toAccount)
                 .amount(amount)
                 .currency(currency)
-                .transactionId(request.getTransactionId())
+                .transactionId(transactionId)
                 .status(status)
                 .relatedTxnId(relatedTxnId)
                 .transactionType(transactionType)
@@ -116,10 +116,10 @@ public class TxnServiceImpl implements TxnService {
     }
 
     @Override
-    public ApiResponse release(TransferRequest request) {
+    public ApiResponse release(String  transactionId) {
 
         try {
-            Optional<TransferEntity> transfer = transferRepository.findByTransactionId(request.getTransactionId());
+            Optional<TransferEntity> transfer = transferRepository.findByTransactionId(transactionId);
             if (transfer.isPresent()) {
                 if (Constants.COMPLETED.equals(transfer.get().getStatus())) {
                     log.error("transfer is already released!");
@@ -131,9 +131,9 @@ public class TxnServiceImpl implements TxnService {
                 if (!toAccounts.isPresent())
                     return buildApiResponse("Accounts not found!", "404", Constants.FAILED);
 
-                releaseTxn(transfer.get(), request, transfer.get().getToAccount(), toAccounts.get().getId());
+                releaseTxn(transfer.get(), transactionId, transfer.get().getToAccount(), toAccounts.get().getId());
             } else {
-                log.error("no transaction found for given transaction id {}", request.getTransactionId());
+                log.error("no transaction found for given transaction id {}", transactionId);
                 return buildApiResponse("No transaction found", "500", Constants.FAILED);
             }
         } catch (Exception ex) {
@@ -145,8 +145,8 @@ public class TxnServiceImpl implements TxnService {
     }
 
     @Transactional
-    public void releaseTxn(TransferEntity transfer, TransferRequest request, Integer fromAccount, Integer toAccount) {
-        TransferEntity entity = buildTransferEntity(request, fromAccount, toAccount,
+    public void releaseTxn(TransferEntity transfer, String  transactionId, Integer fromAccount, Integer toAccount) {
+        TransferEntity entity = buildTransferEntity(transactionId, fromAccount, toAccount,
                 transfer.getAmount(), Constants.COMPLETED, transfer.getCurrency(), transfer.getTransactionType(), transfer.getId());
         entity.setCreatedDate(Date.valueOf(LocalDate.now()));
         transferRepository.save(entity);
@@ -159,9 +159,9 @@ public class TxnServiceImpl implements TxnService {
 
 
     @Override
-    public ApiResponse reverse(TransferRequest request) {
+    public ApiResponse reverse(String  transactionId) {
         try {
-            Optional<TransferEntity> transfer = transferRepository.findByTransactionId(request.getTransactionId());
+            Optional<TransferEntity> transfer = transferRepository.findByTransactionId(transactionId);
             if (transfer.isPresent()) {
                 if (Constants.COMPLETED.equals(transfer.get().getStatus())) {
                     log.error("transfer is already reversed!");
@@ -169,9 +169,9 @@ public class TxnServiceImpl implements TxnService {
                 }
 
 
-                reverseTxn(transfer.get(), request, transfer.get().getFromAccount(), transfer.get().getToAccount());
+                reverseTxn(transfer.get(), transactionId, transfer.get().getFromAccount(), transfer.get().getToAccount());
             } else {
-                log.error("No reverse transaction found for given transaction id {}", request.getTransactionId());
+                log.error("No reverse transaction found for given transaction id {}", transactionId);
                 return buildApiResponse("No transaction found", "500", Constants.FAILED);
             }
         } catch (Exception ex) {
@@ -184,8 +184,8 @@ public class TxnServiceImpl implements TxnService {
 
 
     @Transactional
-    public void reverseTxn(TransferEntity transfer, TransferRequest request, Integer fromAccount, Integer toAccount) {
-        TransferEntity entity = buildTransferEntity(request, fromAccount, toAccount,
+    public void reverseTxn(TransferEntity transfer, String  transactionId, Integer fromAccount, Integer toAccount) {
+        TransferEntity entity = buildTransferEntity(transactionId, fromAccount, toAccount,
                 transfer.getAmount(), Constants.COMPLETED, transfer.getCurrency(), transfer.getTransactionType(), transfer.getId());
         entity.setCreatedDate(Date.valueOf(LocalDate.now()));
 

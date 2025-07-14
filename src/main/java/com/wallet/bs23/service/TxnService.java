@@ -5,6 +5,6 @@ import com.wallet.bs23.dto.TransferRequest;
 
 public interface TxnService {
     ApiResponse doTxn(TransferRequest request);
-    ApiResponse release(TransferRequest request);
-    ApiResponse reverse(TransferRequest request);
+    ApiResponse release(String  transactionId);
+    ApiResponse reverse(String transactionId);
 }
